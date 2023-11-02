@@ -9,17 +9,21 @@ export class Favorites {
 
     load() {
         this.entries = JSON.parse(localStorage.getItem(this.localTableName)) || []
+        this.entries = this.entries.filter(entry => !!entry)
+        this.save()
         return this.entries
     }
 
     async add(username) {
         try {
             if(this.entries && this.entries.length > 0) {
-                const userExists = this.entries.find(entry => entry.login == username)
+                const userExists = this.entries.find(entry => entry && entry.login && entry.login == username)
                 if (userExists) throw new Error(`Usuário ${username} já cadastrado`)
             }
 
             const githubuser = await GithubUser.search(username)
+            if(!githubuser) return
+            
             this.entries = [ githubuser, ...this.entries ]
             this.save()
             this.update()    
@@ -91,6 +95,8 @@ export class FavoritesView extends Favorites {
     }
 
     createRow(user) {
+        if(!user) return
+
         const tr = document.createElement('tr')
         tr.innerHTML = `
         <td class="user">
